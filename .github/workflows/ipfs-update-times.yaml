@@ -25,11 +25,11 @@ jobs:
           /usr/bin/time -f "%e" ./ipfs-update/ipfs-update fetch latest >output 2>seconds
       - name: Record results
         run: |
-          DURATION=$(cat seconds);
+          DURATION="$(cat seconds)";
           sqlite3 ./ipfs-update-times/timeseries.db <<EOF
-          CREATE TABLE IF NOT EXISTS log ( ID INTEGER PRIMARY KEY, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP, output TEXT,  duration FLOAT);
+          CREATE TABLE IF NOT EXISTS log ( ID INTEGER PRIMARY KEY, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP, output TEXT,  duration TEXT);
           INSERT INTO log ( output, duration )
-          VALUES ( readfile("output"), $DURATION);
+          VALUES ( readfile("output"), "$DURATION");
           EOF
       - name: Commit to Posterity
         uses: EndBug/add-and-commit@v9
