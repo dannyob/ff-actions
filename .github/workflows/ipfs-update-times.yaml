@@ -1,8 +1,13 @@
 name: IPFS Update Times
+
 on: 
   workflow_dispatch:
     inputs:
-      description: "Check how long ipfs-update is taking"
+      description: "Run IPFS Update Check"
+      required: false
+      type: boolean
+      default: true
+
 jobs:
   IPFS-Update-Times:
     runs-on: ubuntu-latest
