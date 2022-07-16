@@ -1,0 +1,43 @@
+name: IPFS Update Times
+on: 
+  workflow_dispatch:
+    inputs:
+      description: "Check how long ipfs-update is taking"
+jobs:
+  IPFS-Update-Times:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install time for weird reasons
+        run: |
+          sudo apt update;
+          sudo apt install time;
+          sudo apt install sqlite3;
+      - name: Download ipfs-update
+        run: |
+          LATEST=$(curl https://dist.ipfs.io/ipfs-update/versions | tail -n1);
+          curl "https://dist.ipfs.io/ipfs-update/${LATEST}/ipfs-update_${LATEST}_linux-amd64.tar.gz" > latest.tar.gz;
+          tar xvfz latest.tar.gz;
+      - name: Time Run
+        continue-on-error: true
+        run: |
+          #/usr/bin/time -f "%e" ./ipfs-update/ipfs-update fetch latest >output 2>seconds
+          echo "Testing" >output
+          echo "12.3" >seconds
+      - name: Record results
+        run: |
+          DURATION=$(cat seconds);
+          sqlite3 ./ipfs-update-times/timeseries.db <<EOF
+          CREATE TABLE IF NOT EXISTS log ( ID INTEGER PRIMARY KEY, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP, output TEXT,  duration FLOAT);
+          INSERT INTO log ( output, duration )
+          VALUES ( readfile("output"), $DURATION);
+          EOF
+      - name: Commit to Posterity
+        run: |
+          git config --global user.name 'IPFS-Update-Log'
+          git config --global user.email 'danny@spesh.com'
+          git add ./ipfs-update-times/timeseries.db
+          git commit -m "Automated github action commit from IPFS-Update-Times"
+      - name: And push to repo
+        run: git push origin -f
