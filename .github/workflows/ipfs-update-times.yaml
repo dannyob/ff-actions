@@ -2,6 +2,8 @@ name: IPFS Update Times
 
 on: 
   workflow_dispatch:
+  schedule:
+    - cron: '23 * * * *'
 
 jobs:
   IPFS-Update-Times:
@@ -21,14 +23,11 @@ jobs:
       - name: Time Run
         continue-on-error: true
         run: |
-          echo $SECONDS >start
+          START=$SECONDS
           ./ipfs-update/ipfs-update fetch latest >output
-      - name: Record results
-        run: |
-          START=$(cat start)
           DURATION=$(($SECONDS-$START))
           sqlite3 ./ipfs-update-times/timeseries.db <<EOF
-          CREATE TABLE IF NOT EXISTS log ( ID INTEGER PRIMARY KEY, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP, output TEXT,  duration TEXT);
+          CREATE TABLE IF NOT EXISTS log ( ID INTEGER PRIMARY KEY, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP, output TEXT,  duration INTEGER);
           INSERT INTO log ( output, duration )
           VALUES ( readfile("output"), "$DURATION");
           EOF
