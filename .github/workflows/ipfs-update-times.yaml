@@ -12,7 +12,6 @@ jobs:
       - name: Install time for weird reasons
         run: |
           sudo apt update;
-          sudo apt install time;
           sudo apt install sqlite3;
       - name: Download ipfs-update
         run: |
@@ -22,10 +21,12 @@ jobs:
       - name: Time Run
         continue-on-error: true
         run: |
-          /usr/bin/time -f "%e" ./ipfs-update/ipfs-update fetch latest >output 2>seconds
+          echo $SECONDS >start
+          ./ipfs-update/ipfs-update fetch latest >output
       - name: Record results
         run: |
-          DURATION="$(cat seconds)";
+          START=$(cat start)
+          DURATION=$(($SECONDS-$START))
           sqlite3 ./ipfs-update-times/timeseries.db <<EOF
           CREATE TABLE IF NOT EXISTS log ( ID INTEGER PRIMARY KEY, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP, output TEXT,  duration TEXT);
           INSERT INTO log ( output, duration )
