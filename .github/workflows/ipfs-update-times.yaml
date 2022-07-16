@@ -22,9 +22,7 @@ jobs:
       - name: Time Run
         continue-on-error: true
         run: |
-          #/usr/bin/time -f "%e" ./ipfs-update/ipfs-update fetch latest >output 2>seconds
-          echo "Testing" >output
-          echo "12.3" >seconds
+          /usr/bin/time -f "%e" ./ipfs-update/ipfs-update fetch latest >output 2>seconds
       - name: Record results
         run: |
           DURATION=$(cat seconds);
