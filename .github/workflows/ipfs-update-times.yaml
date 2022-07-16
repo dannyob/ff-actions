@@ -34,10 +34,9 @@ jobs:
           VALUES ( readfile("output"), $DURATION);
           EOF
       - name: Commit to Posterity
-        run: |
-          git config --global user.name 'IPFS-Update-Log'
-          git config --global user.email 'danny@spesh.com'
-          git add ./ipfs-update-times/timeseries.db
-          git commit -m "Automated github action commit from IPFS-Update-Times"
-      - name: And push to repo
-        run: git push origin -f
+        uses: EndBug/add-and-commit@v9
+        with:
+          add: ipfs-update-times/timeseries.db
+          author_name: Danny
+          author_email: danny@spesh.com
+          message: "[automated] Update IPFS-Update-Times."
