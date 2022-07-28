@@ -11,16 +11,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Install time for weird reasons
+      - name: Install sqlite3 (only needed for nektos/act medium sized docker)
         run: |
           sudo apt update;
           sudo apt install sqlite3;
-      - name: Download ipfs-update
+      - name: Download latest ipfs-update
         run: |
           LATEST=$(curl https://dist.ipfs.io/ipfs-update/versions | tail -n1);
           curl "https://dist.ipfs.io/ipfs-update/${LATEST}/ipfs-update_${LATEST}_linux-amd64.tar.gz" > latest.tar.gz;
           tar xvfz latest.tar.gz;
-      - name: Time Run
+      - name: Timed Run of ipfs-update Fetching the Latest Version
         continue-on-error: true
         run: |
           START=$SECONDS
