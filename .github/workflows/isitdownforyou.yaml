@@ -1,0 +1,32 @@
+name: Is it down for you
+
+on: 
+  workflow_dispatch:
+  schedule:
+    - cron: '23 * * * *'
+
+jobs:
+  Is-it-down-for-you:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install sqlite3 (only needed for nektos/act )
+        run: |
+          sudo apt update;
+          sudo apt install sqlite3;
+      - name: Check website speed and availability
+        run: |
+          RESPONSE=$(curl -o /dev/null --silent --head --write-out '%{http_code}\n' 'https://file.app');
+          sqlite3 ./site-availability/timeseries.db <<EOF
+          CREATE TABLE IF NOT EXISTS log ( ID INTEGER PRIMARY KEY, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP, webpage TEXT,  responsecode INTEGER);
+          INSERT INTO log ( webpage, responsecode)
+          VALUES ( "https://file.app/", $RESPONSE);
+          EOF
+      - name: Commit to Posterity
+        uses: EndBug/add-and-commit@v9
+        with:
+          add: site-availability/timeseries.db
+          author_name: Danny
+          author_email: danny@spesh.com
+          message: "[automated] Update website availability."
