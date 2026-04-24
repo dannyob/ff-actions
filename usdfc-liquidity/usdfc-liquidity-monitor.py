@@ -178,6 +178,102 @@ def export_csv(conn: sqlite3.Connection, csv_path: str, limit: int | None = None
     return len(rows)
 
 
+def fetch_prices(client: httpx.Client) -> dict:
+    """Fetch USD prices from CoinGecko. Returns {coingecko_id: price_usd}."""
+    ids = [p["coingecko_id"] for p in PAIRS.values() if p["coingecko_id"]]
+    if not ids:
+        return {}
+    try:
+        resp = client.get(
+            COINGECKO_API,
+            params={"ids": ",".join(ids), "vs_currencies": "usd"},
+            timeout=10,
+        )
+        data = resp.json()
+        return {cid: data[cid]["usd"] for cid in ids if cid in data}
+    except Exception:
+        return {}
+
+
+def compute_amount(pair: dict, prices: dict) -> str:
+    """Compute the source-token amount targeting ~$TARGET_USD."""
+    cid = pair["coingecko_id"]
+    decimals = pair["decimals"]
+    if cid is None:
+        price = 1.0                           # stablecoin
+    elif cid in prices:
+        price = prices[cid]
+    else:
+        price = {"ethereum": 2000.0, "filecoin": 1.0}.get(cid, 1.0)
+    token_amount = TARGET_USD / price
+    return str(int(token_amount * (10 ** decimals)))
+
+
+def _now_utc() -> str:
+    return datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S+00")
+
+
+def check_pair(pair_id: str, pair: dict, prices: dict, client: httpx.Client) -> dict:
+    body = {
+        "fromChain": pair["fromChain"],
+        "fromToken": pair["fromToken"],
+        "fromAmount": compute_amount(pair, prices),
+        "toChain": "314",
+        "toToken": USDFC,
+        "toAddress": "0x0000000000000000000000000000000000000001",
+        "fromAddress": "0x0000000000000000000000000000000000000001",
+        "slippage": 1,
+        "quoteOnly": True,
+    }
+    result = {"pair": pair_id, "label": pair["label"], "timestamp": _now_utc()}
+    try:
+        resp = client.post(SQUID_API, headers=HEADERS, json=body, timeout=30)
+    except httpx.HTTPError as e:
+        result.update(ok=False, message=f"Request failed: {e}")
+        return result
+    try:
+        data = resp.json()
+    except ValueError:
+        result.update(ok=False, message=f"HTTP {resp.status_code}: non-JSON response")
+        return result
+    if resp.status_code == 200 and data.get("route"):
+        estimate = data["route"].get("estimate", {})
+        gas = sum(float(g.get("amountUSD", 0)) for g in estimate.get("gasCosts", []))
+        result.update(
+            ok=True,
+            message=f"Route available: ~${estimate.get('toAmountUSD', '?')} out",
+            exchange_rate=float(estimate["exchangeRate"]) if estimate.get("exchangeRate") else None,
+            to_amount_usd=float(estimate["toAmountUSD"]) if estimate.get("toAmountUSD") else None,
+            price_impact=float(estimate["aggregatePriceImpact"]) if estimate.get("aggregatePriceImpact") else None,
+            estimated_duration_s=estimate.get("estimatedRouteDuration"),
+            gas_cost_usd=round(gas, 4),
+        )
+    else:
+        result.update(ok=False, message=data.get("message", f"HTTP {resp.status_code}"))
+    return result
+
+
+def run_checks(conn: sqlite3.Connection, client: httpx.Client, as_json: bool) -> bool:
+    prices = fetch_prices(client)
+    results = []
+    all_ok = True
+    for pair_id, pair in PAIRS.items():
+        r = check_pair(pair_id, pair, prices, client)
+        log_result(conn, r)
+        results.append(r)
+        if not r.get("ok"):
+            all_ok = False
+    if as_json:
+        print(json.dumps(results, default=str))
+    else:
+        print(f"[{_now_utc()}]")
+        for r in results:
+            status = "OK  " if r.get("ok") else "FAIL"
+            print(f"  {status}  {r['label']}: {r.get('message', '')}")
+        print()
+    return all_ok
+
+
 def main() -> int:
     raise NotImplementedError
 

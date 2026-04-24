@@ -202,5 +202,41 @@ class ExportCsvTests(unittest.TestCase):
             self.assertTrue(os.path.exists(csv_path))
 
 
+from unittest.mock import MagicMock, patch
+
+
+class RunChecksTests(unittest.TestCase):
+    def test_run_checks_adds_one_row_per_pair(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            conn = monitor.init_db(os.path.join(tmpdir, "t.sqlite"))
+
+            fake_resp = MagicMock()
+            fake_resp.status_code = 200
+            fake_resp.json.return_value = {
+                "route": {
+                    "estimate": {
+                        "exchangeRate": "0.0005",
+                        "toAmountUSD": "9.94",
+                        "aggregatePriceImpact": "0.0",
+                        "estimatedRouteDuration": 120,
+                        "gasCosts": [{"amountUSD": "0.25"}],
+                    }
+                }
+            }
+            client = MagicMock()
+            client.post.return_value = fake_resp
+            client.get.return_value = MagicMock(
+                json=MagicMock(return_value={"ethereum": {"usd": 2000}, "filecoin": {"usd": 1}})
+            )
+
+            monitor.run_checks(conn, client, as_json=False)
+            rows = conn.execute("SELECT pair, ok FROM checks").fetchall()
+            conn.close()
+
+        self.assertEqual(len(rows), len(monitor.PAIRS))
+        self.assertEqual({r[0] for r in rows}, set(monitor.PAIRS.keys()))
+        self.assertTrue(all(r[1] == 1 for r in rows))
+
+
 if __name__ == "__main__":
     unittest.main()
