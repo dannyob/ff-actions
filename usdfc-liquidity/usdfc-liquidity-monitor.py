@@ -87,6 +87,38 @@ PAIRS = {
 }
 
 
+def _ensure_parent(path: str) -> None:
+    parent = os.path.dirname(path)
+    if parent:
+        os.makedirs(parent, exist_ok=True)
+
+
+def init_db(db_path: str) -> sqlite3.Connection:
+    """Open (or create) the SQLite checks DB. Returns a live connection."""
+    _ensure_parent(db_path)
+    conn = sqlite3.connect(db_path)
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS checks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp TEXT NOT NULL,
+            pair TEXT NOT NULL,
+            ok INTEGER NOT NULL,
+            message TEXT,
+            exchange_rate REAL,
+            to_amount_usd REAL,
+            price_impact REAL,
+            estimated_duration_s INTEGER,
+            gas_cost_usd REAL
+        )
+        """
+    )
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_checks_ts ON checks(timestamp)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_checks_pair ON checks(pair)")
+    conn.commit()
+    return conn
+
+
 def main() -> int:
     raise NotImplementedError
 
