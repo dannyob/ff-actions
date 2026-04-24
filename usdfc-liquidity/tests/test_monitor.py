@@ -154,6 +154,19 @@ class ExportCsvTests(unittest.TestCase):
         self.assertEqual(rows[1][3], "true")
         self.assertEqual(rows[2][3], "false")
 
+    def test_limit_keeps_newest_rows_in_chronological_order(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            conn = monitor.init_db(os.path.join(tmpdir, "t.sqlite"))
+            _seed_rows(conn, 10)  # 10:00..10:09
+            csv_path = os.path.join(tmpdir, "out.csv")
+            n = monitor.export_csv(conn, csv_path, limit=3)
+            conn.close()
+            with open(csv_path, newline="") as f:
+                rows = list(_csv.DictReader(f))
+        self.assertEqual(n, 3)
+        minutes = [r["timestamp"][14:16] for r in rows]  # extract MM
+        self.assertEqual(minutes, ["07", "08", "09"])
+
 
 if __name__ == "__main__":
     unittest.main()
