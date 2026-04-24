@@ -238,5 +238,37 @@ class RunChecksTests(unittest.TestCase):
         self.assertTrue(all(r[1] == 1 for r in rows))
 
 
+class MainTests(unittest.TestCase):
+    def test_once_mode_writes_db_and_csv_and_exits_zero(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            db = os.path.join(tmpdir, "t.sqlite")
+            csv_path = os.path.join(tmpdir, "t.csv")
+
+            fake_resp = MagicMock()
+            fake_resp.status_code = 200
+            fake_resp.json.return_value = {
+                "route": {"estimate": {"toAmountUSD": "9.9", "gasCosts": []}}
+            }
+            fake_client = MagicMock()
+            fake_client.post.return_value = fake_resp
+            fake_client.get.return_value = MagicMock(json=MagicMock(return_value={}))
+
+            argv = [
+                "monitor", "--once", "--db", db, "--csv", csv_path,
+                "--csv-limit", "100",
+            ]
+            with patch.object(sys, "argv", argv), \
+                 patch.object(monitor.httpx, "Client", return_value=fake_client):
+                rc = monitor.main()
+
+            self.assertEqual(rc, 0)
+            self.assertTrue(os.path.exists(db))
+            self.assertTrue(os.path.exists(csv_path))
+            with open(csv_path, newline="") as f:
+                rows = list(_csv.reader(f))
+            # header + 4 pair rows
+            self.assertEqual(len(rows), 1 + len(monitor.PAIRS))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -275,7 +275,49 @@ def run_checks(conn: sqlite3.Connection, client: httpx.Client, as_json: bool) ->
 
 
 def main() -> int:
-    raise NotImplementedError
+    parser = argparse.ArgumentParser(description="Monitor USDFC liquidity across multiple pairs")
+    parser.add_argument("--db", default="usdfc-liquidity.sqlite",
+                        help="SQLite database path")
+    parser.add_argument("--csv", metavar="PATH",
+                        help="Write a slim CSV (id, timestamp, pair, ok) after the run")
+    parser.add_argument("--csv-limit", type=int, metavar="N",
+                        help="Limit the CSV to the newest N rows")
+    parser.add_argument("--json", action="store_true",
+                        help="Emit per-check results as JSON to stdout")
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--once", action="store_true",
+                      help="Run exactly one check cycle and exit (CI default)")
+    mode.add_argument("--loop", type=int, metavar="SECONDS",
+                      help="Repeat every N seconds (standalone use)")
+    args = parser.parse_args()
+
+    conn = init_db(args.db)
+    client = httpx.Client()
+
+    def maybe_export() -> None:
+        if args.csv:
+            n = export_csv(conn, args.csv, limit=args.csv_limit)
+            print(f"  CSV export: {n} rows → {args.csv}")
+
+    try:
+        if args.loop:
+            print(f"Monitoring every {args.loop}s. Ctrl-C to stop.\n")
+            try:
+                while True:
+                    run_checks(conn, client, args.json)
+                    maybe_export()
+                    time.sleep(args.loop)
+            except KeyboardInterrupt:
+                print("\nStopped.")
+                return 0
+        else:
+            # --once or no mode specified: single run.
+            all_ok = run_checks(conn, client, args.json)
+            maybe_export()
+            return 0 if all_ok else 1
+    finally:
+        conn.close()
+    return 0
 
 
 if __name__ == "__main__":
