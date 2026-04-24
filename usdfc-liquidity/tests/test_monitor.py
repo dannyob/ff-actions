@@ -109,5 +109,51 @@ class LogResultTests(unittest.TestCase):
         self.assertEqual(count, 1)
 
 
+import csv as _csv  # avoid clash with monitor.csv usage
+
+
+def _seed_rows(conn, n: int) -> None:
+    for i in range(n):
+        ts = f"2026-04-24 10:{i:02d}:00+00"
+        conn.execute(
+            "INSERT INTO checks (timestamp, pair, ok) VALUES (?, ?, ?)",
+            [ts, "eth-usdfc", i % 2],
+        )
+    conn.commit()
+
+
+class ExportCsvTests(unittest.TestCase):
+    def test_writes_header_and_all_rows_in_ascending_order(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            conn = monitor.init_db(os.path.join(tmpdir, "t.sqlite"))
+            _seed_rows(conn, 5)
+            csv_path = os.path.join(tmpdir, "out.csv")
+            n = monitor.export_csv(conn, csv_path)
+            conn.close()
+            with open(csv_path, newline="") as f:
+                rows = list(_csv.reader(f))
+        self.assertEqual(n, 5)
+        self.assertEqual(rows[0], ["id", "timestamp", "pair", "ok"])
+        timestamps = [r[1] for r in rows[1:]]
+        self.assertEqual(timestamps, sorted(timestamps))
+
+    def test_ok_column_emits_true_false_strings(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            conn = monitor.init_db(os.path.join(tmpdir, "t.sqlite"))
+            conn.execute("INSERT INTO checks (timestamp, pair, ok) VALUES (?, ?, 1)",
+                         ["2026-04-24 10:00:00+00", "eth-usdfc"])
+            conn.execute("INSERT INTO checks (timestamp, pair, ok) VALUES (?, ?, 0)",
+                         ["2026-04-24 10:05:00+00", "eth-usdfc"])
+            conn.commit()
+            csv_path = os.path.join(tmpdir, "out.csv")
+            monitor.export_csv(conn, csv_path)
+            conn.close()
+            with open(csv_path, newline="") as f:
+                rows = list(_csv.reader(f))
+        # rows[0] is header; rows[1], rows[2] are data
+        self.assertEqual(rows[1][3], "true")
+        self.assertEqual(rows[2][3], "false")
+
+
 if __name__ == "__main__":
     unittest.main()

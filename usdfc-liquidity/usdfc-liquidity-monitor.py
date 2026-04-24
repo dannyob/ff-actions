@@ -143,6 +143,41 @@ def log_result(conn: sqlite3.Connection, r: dict) -> None:
     conn.commit()
 
 
+def export_csv(conn: sqlite3.Connection, csv_path: str, limit: int | None = None) -> int:
+    """Export rows as a slim CSV (id, timestamp, pair, ok). Atomic replace.
+
+    If `limit` is given, keep only the newest `limit` rows (by timestamp),
+    written in chronological ascending order.
+    Returns the number of rows written.
+    """
+    _ensure_parent(csv_path)
+    tmp = csv_path + ".tmp"
+    if limit is None:
+        rows = conn.execute(
+            "SELECT id, timestamp, pair, ok FROM checks ORDER BY timestamp ASC"
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            """SELECT id, timestamp, pair, ok FROM (
+                   SELECT id, timestamp, pair, ok FROM checks
+                   ORDER BY timestamp DESC LIMIT ?
+               ) ORDER BY timestamp ASC""",
+            (limit,),
+        ).fetchall()
+    try:
+        with open(tmp, "w", newline="") as f:
+            w = csv.writer(f)
+            w.writerow(["id", "timestamp", "pair", "ok"])
+            for id_, ts, pair, ok in rows:
+                w.writerow([id_, ts, pair, "true" if ok else "false"])
+        os.rename(tmp, csv_path)
+    except BaseException:
+        if os.path.exists(tmp):
+            os.unlink(tmp)
+        raise
+    return len(rows)
+
+
 def main() -> int:
     raise NotImplementedError
 
