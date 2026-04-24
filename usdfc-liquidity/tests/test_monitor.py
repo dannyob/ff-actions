@@ -167,6 +167,40 @@ class ExportCsvTests(unittest.TestCase):
         minutes = [r["timestamp"][14:16] for r in rows]  # extract MM
         self.assertEqual(minutes, ["07", "08", "09"])
 
+    def test_replaces_existing_file(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            conn = monitor.init_db(os.path.join(tmpdir, "t.sqlite"))
+            _seed_rows(conn, 2)
+            csv_path = os.path.join(tmpdir, "out.csv")
+            monitor.export_csv(conn, csv_path)
+            with open(csv_path) as f:
+                self.assertEqual(len(f.readlines()), 3)  # header + 2
+            _seed_rows(conn, 5)  # adds 5 more starting at minute 00..04 (dup minutes, but ids unique)
+            monitor.export_csv(conn, csv_path)
+            with open(csv_path) as f:
+                lines = f.readlines()
+            conn.close()
+        self.assertEqual(len(lines), 8)  # header + 7
+
+    def test_no_tmp_file_left_behind(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            conn = monitor.init_db(os.path.join(tmpdir, "t.sqlite"))
+            _seed_rows(conn, 1)
+            csv_path = os.path.join(tmpdir, "out.csv")
+            monitor.export_csv(conn, csv_path)
+            conn.close()
+            tmps = [f for f in os.listdir(tmpdir) if f.endswith(".tmp")]
+        self.assertEqual(tmps, [])
+
+    def test_creates_missing_parent_dir(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            conn = monitor.init_db(os.path.join(tmpdir, "t.sqlite"))
+            _seed_rows(conn, 1)
+            csv_path = os.path.join(tmpdir, "nested", "dir", "out.csv")
+            monitor.export_csv(conn, csv_path)
+            conn.close()
+            self.assertTrue(os.path.exists(csv_path))
+
 
 if __name__ == "__main__":
     unittest.main()
