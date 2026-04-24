@@ -119,6 +119,30 @@ def init_db(db_path: str) -> sqlite3.Connection:
     return conn
 
 
+def log_result(conn: sqlite3.Connection, r: dict) -> None:
+    """Insert one probe result into the checks table. Commits immediately."""
+    conn.execute(
+        """
+        INSERT INTO checks
+          (timestamp, pair, ok, message, exchange_rate, to_amount_usd,
+           price_impact, estimated_duration_s, gas_cost_usd)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        [
+            r["timestamp"],
+            r["pair"],
+            1 if r.get("ok") else 0,
+            r.get("message"),
+            r.get("exchange_rate"),
+            r.get("to_amount_usd"),
+            r.get("price_impact"),
+            r.get("estimated_duration_s"),
+            r.get("gas_cost_usd"),
+        ],
+    )
+    conn.commit()
+
+
 def main() -> int:
     raise NotImplementedError
 
