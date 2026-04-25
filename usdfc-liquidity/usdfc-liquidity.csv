@@ -1,9 +1,5 @@
 id,timestamp,pair,ok
-28686,2026-04-05 21:05:03+00,fil-usdfc,true
-28688,2026-04-05 21:05:04+00,polygon-usdc-usdfc,true
-28687,2026-04-05 21:05:04+00,base-usdc-usdfc,true
 28690,2026-04-05 21:10:02+00,fil-usdfc,true
-28689,2026-04-05 21:10:02+00,eth-usdfc,true
 28691,2026-04-05 21:10:03+00,base-usdc-usdfc,true
 28692,2026-04-05 21:10:04+00,polygon-usdc-usdfc,true
 28693,2026-04-05 21:15:02+00,eth-usdfc,true
@@ -19244,8 +19240,8 @@ id,timestamp,pair,ok
 758,2026-04-23 14:25:49+00,fil-usdfc,false
 760,2026-04-23 14:25:50+00,polygon-usdc-usdfc,false
 761,2026-04-23 14:30:51+00,eth-usdfc,false
-762,2026-04-23 14:30:52+00,fil-usdfc,false
 763,2026-04-23 14:30:52+00,base-usdc-usdfc,false
+762,2026-04-23 14:30:52+00,fil-usdfc,false
 764,2026-04-23 14:30:53+00,polygon-usdc-usdfc,false
 770,2026-04-23 14:35:58+00,fil-usdfc,false
 769,2026-04-23 14:35:58+00,eth-usdfc,false
@@ -19416,8 +19412,8 @@ id,timestamp,pair,ok
 13409,2026-04-23 18:03:42+00,eth-usdfc,false
 13412,2026-04-23 18:03:44+00,polygon-usdc-usdfc,false
 13413,2026-04-23 18:08:44+00,eth-usdfc,false
-13414,2026-04-23 18:08:45+00,fil-usdfc,false
 13415,2026-04-23 18:08:45+00,base-usdc-usdfc,false
+13414,2026-04-23 18:08:45+00,fil-usdfc,false
 13416,2026-04-23 18:08:46+00,polygon-usdc-usdfc,false
 13418,2026-04-23 18:13:47+00,fil-usdfc,false
 13417,2026-04-23 18:13:47+00,eth-usdfc,false
@@ -19431,8 +19427,8 @@ id,timestamp,pair,ok
 13426,2026-04-23 18:20:48+00,fil-usdfc,false
 13428,2026-04-23 18:20:49+00,polygon-usdc-usdfc,false
 13427,2026-04-23 18:20:49+00,base-usdc-usdfc,false
-13429,2026-04-23 18:25:50+00,eth-usdfc,false
 13430,2026-04-23 18:25:50+00,fil-usdfc,false
+13429,2026-04-23 18:25:50+00,eth-usdfc,false
 13432,2026-04-23 18:25:51+00,polygon-usdc-usdfc,false
 13431,2026-04-23 18:25:51+00,base-usdc-usdfc,false
 13434,2026-04-23 18:30:52+00,fil-usdfc,false
@@ -19995,7 +19991,11 @@ id,timestamp,pair,ok
 47362,2026-04-25 00:14:09+00,fil-usdfc,true
 47363,2026-04-25 00:14:17+00,base-usdc-usdfc,true
 47364,2026-04-25 00:14:18+00,polygon-usdc-usdfc,true
-,2026-04-25 00:22:05+00,eth-usdfc,true
-,2026-04-25 00:22:06+00,fil-usdfc,true
-,2026-04-25 00:22:07+00,base-usdc-usdfc,true
-,2026-04-25 00:22:08+00,polygon-usdc-usdfc,true
+47365,2026-04-25 00:22:05+00,eth-usdfc,true
+47366,2026-04-25 00:22:06+00,fil-usdfc,true
+47367,2026-04-25 00:22:07+00,base-usdc-usdfc,true
+47368,2026-04-25 00:22:08+00,polygon-usdc-usdfc,true
+47369,2026-04-25 02:47:39+00,eth-usdfc,true
+47370,2026-04-25 02:47:40+00,fil-usdfc,true
+47371,2026-04-25 02:47:41+00,base-usdc-usdfc,true
+47372,2026-04-25 02:47:42+00,polygon-usdc-usdfc,true
