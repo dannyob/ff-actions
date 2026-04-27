@@ -18,6 +18,17 @@ import sys
 def migrate(db_path: str) -> None:
     conn = sqlite3.connect(db_path)
     try:
+        row = conn.execute(
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name='checks'"
+        ).fetchone()
+        if row and "AUTOINCREMENT" in row[0]:
+            print("checks table already migrated; nothing to do")
+            return
+    finally:
+        conn.close()
+
+    conn = sqlite3.connect(db_path)
+    try:
         conn.execute("BEGIN")
         # Create new table with correct schema.
         conn.execute("""

@@ -41,10 +41,10 @@ single underlying bridge.
 
 ```
 CREATE TABLE checks (
-    id INTEGER PRIMARY KEY,
-    timestamp TEXT,                -- ISO 8601 UTC, e.g. "2026-04-24 10:00:00+00"
-    pair TEXT,                     -- one of the slugs above
-    ok INTEGER,                    -- 1 if Squid returned a route, 0 otherwise
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    timestamp TEXT NOT NULL,       -- ISO 8601 UTC, e.g. "2026-04-24 10:00:00+00"
+    pair TEXT NOT NULL,            -- one of the slugs above
+    ok INTEGER NOT NULL,           -- 1 if Squid returned a route, 0 otherwise
     message TEXT,                  -- Squid's message or error string
     exchange_rate REAL,
     to_amount_usd REAL,
