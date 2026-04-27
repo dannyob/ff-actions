@@ -1,0 +1,32 @@
+name: USDFC Liquidity
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 * * * *'
+
+concurrency:
+  group: usdfc-liquidity
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - name: Probe
+        run: |
+          uv run --script usdfc-liquidity/usdfc-liquidity-monitor.py \
+            --db usdfc-liquidity/usdfc-liquidity.sqlite \
+            --csv usdfc-liquidity/usdfc-liquidity.csv \
+            --csv-limit 20000 \
+            --once
+      - uses: EndBug/add-and-commit@a94899bca583c204427a224a7af87c02f9b325d5  # v9.1.4
+        with:
+          add: usdfc-liquidity/
+          author_name: Danny
+          author_email: danny@spesh.com
+          message: '[automated] usdfc-liquidity probe'
