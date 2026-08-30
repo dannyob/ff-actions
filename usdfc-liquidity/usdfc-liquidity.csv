@@ -1,8 +1,4 @@
 id,timestamp,pair,ok
-38311,2026-04-14 11:15:02+00,base-usdc-usdfc,false
-38310,2026-04-14 11:15:02+00,fil-usdfc,false
-38312,2026-04-14 11:15:03+00,polygon-usdc-usdfc,false
-38313,2026-04-14 11:20:02+00,eth-usdfc,false
 38314,2026-04-14 11:20:08+00,fil-usdfc,false
 38315,2026-04-14 11:20:10+00,base-usdc-usdfc,false
 38316,2026-04-14 11:20:12+00,polygon-usdc-usdfc,false
@@ -19999,3 +19995,7 @@ id,timestamp,pair,ok
 56989,2026-08-30 00:32:23+00,eth-usdfc,true
 56992,2026-08-30 00:32:24+00,polygon-usdc-usdfc,true
 56991,2026-08-30 00:32:24+00,base-usdc-usdfc,true
+56993,2026-08-30 01:21:43+00,eth-usdfc,true
+56996,2026-08-30 01:21:44+00,polygon-usdc-usdfc,true
+56995,2026-08-30 01:21:44+00,base-usdc-usdfc,true
+56994,2026-08-30 01:21:44+00,fil-usdfc,true
